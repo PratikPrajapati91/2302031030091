@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  flight-booking-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flight-booking-system
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+      - /dev/snd:/dev/snd  # For audio
+    ports:
+      - "8000:8000"  # Optional: for web interface
+    devices:
+      - /dev/snd:/dev/snd  # Audio device
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "from src.main import FlightBookingSystem; app = FlightBookingSystem(); health = app.health_check(); exit(0 if health['status'] == 'healthy' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  logs:
+  config:
